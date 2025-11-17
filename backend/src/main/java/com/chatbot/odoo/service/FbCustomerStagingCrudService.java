@@ -1,0 +1,110 @@
+package com.chatbot.odoo.service;
+
+import com.chatbot.odoo.model.*;
+import com.chatbot.odoo.repository.FbCustomerStagingRepository;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.stereotype.Service;
+import java.util.*;
+import org.springframework.transaction.annotation.Transactional;
+
+
+@Service
+public class FbCustomerStagingCrudService {
+
+    private final FbCustomerStagingRepository repository;
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
+    public FbCustomerStagingCrudService(FbCustomerStagingRepository repository) {
+        this.repository = repository;
+    }
+
+    /** 🔹 Tạo hoặc cập nhật thông tin tạm */
+    public FbCustomerStaging upsert(FbCustomerStaging customer) {
+        Optional<FbCustomerStaging> existing = repository.findById(customer.getPsid());
+
+        if (existing.isPresent()) {
+            FbCustomerStaging current = existing.get();
+
+            if (customer.getOwnerId() != null)
+                current.setOwnerId(customer.getOwnerId());
+            if (customer.getPageId() != null)
+                current.setPageId(customer.getPageId());
+            if (customer.getStatus() != null)
+                current.setStatus(customer.getStatus());
+            if (customer.getOdooId() != null)
+                current.setOdooId(customer.getOdooId());
+
+            // ⭐️ BỔ SUNG: CẬP NHẬT TRƯỜNG PHONES ⭐️
+            if (customer.getPhones() != null) {
+                current.setPhones(customer.getPhones());
+            }
+
+            current.setDataJson(mergeJson(current.getDataJson(), customer.getDataJson()));
+            return repository.save(current);
+        } else {
+            if (customer.getDataJson() == null) customer.setDataJson("{}");
+            return repository.save(customer);
+        }
+    }
+
+    /** 🔹 Lấy theo PSID nhưng chỉ trong phạm vi của ownerId */
+    public Optional<FbCustomerStaging> getByPsid(String psid, String ownerId) {
+        return repository.findByPsidAndOwnerId(psid, ownerId);
+    }
+
+    /** 🔹 Lấy tất cả khách hàng theo ownerId */
+    public List<FbCustomerStaging> getAllByOwnerId(String ownerId) {
+        return repository.findByOwnerId(ownerId);
+    }
+
+    /** 🔹 Xóa */
+    public void delete(String psid, String ownerId) {
+        repository.deleteByPsidAndOwnerId(psid, ownerId);
+    }
+
+    /** Hợp nhất JSON cũ và mới */
+    private String mergeJson(String oldJson, String newJson) {
+        try {
+            Map<String, Object> oldMap = objectMapper.readValue(
+                    Optional.ofNullable(oldJson).orElse("{}"), new TypeReference<>() {});
+            Map<String, Object> newMap = objectMapper.readValue(
+                    Optional.ofNullable(newJson).orElse("{}"), new TypeReference<>() {});
+            oldMap.putAll(newMap);
+            return objectMapper.writeValueAsString(oldMap);
+        } catch (Exception e) {
+            return newJson;
+        }
+    }
+
+    public List<FbCustomerStaging> getAll() {
+        // Giả định FbCustomerStagingRepository kế thừa JpaRepository hoặc tương đương
+        return repository.findAll(); 
+    }
+
+    /** 🔹 Cập nhật riêng dataJson và status của user theo psid + ownerId */
+    @Transactional
+    public FbCustomerStaging updateDataJsonAndStatus(String psid, String ownerId, String dataJson, CustomerStatus  status) {
+        System.out.println("Update " + psid + " with dataJson " + dataJson + " and status " + status);
+        // Tìm bản ghi theo psid + ownerId
+        Optional<FbCustomerStaging> existingOpt = repository.findByPsidAndOwnerId(psid, ownerId);
+        if (existingOpt.isEmpty()) {
+            throw new IllegalArgumentException("Temp user not found for psid=" + psid + " and ownerId=" + ownerId);
+        }
+
+        FbCustomerStaging existing = existingOpt.get();
+
+        // Cập nhật status nếu có
+        if (status != null) {
+            existing.setStatus(status);
+        }
+
+        // Cập nhật hoặc gộp JSON nếu có
+        if (dataJson != null) {
+            existing.setDataJson(mergeJson(existing.getDataJson(), dataJson));
+        }
+
+        // Lưu lại
+        return repository.save(existing);
+    }
+}

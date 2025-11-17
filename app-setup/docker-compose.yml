@@ -1,0 +1,156 @@
+services:
+  # ----------------------------------------
+  # PostgreSQL Shared (pgvector)
+  # ----------------------------------------
+  db:
+    image: ankane/pgvector:latest
+    container_name: traloitudong_postgres
+    restart: always
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Admin_12345
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres-init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+    - "5432:5432" 
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # ----------------------------------------
+  # Redis
+  # ----------------------------------------
+  redis:
+    image: redis:7
+    container_name: chatwoot_redis
+    restart: always
+    volumes:
+      - redis_data:/data
+    networks:
+      - internal
+
+  # ----------------------------------------
+  # MinIO
+  # ----------------------------------------
+  minio:
+    image: quay.io/minio/minio
+    container_name: minio
+    restart: always
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    command: server /data --console-address ":9090"
+    ports:
+      - "9000:9000"
+      - "9090:9090"
+    volumes:
+      - minio_data:/data
+    networks:
+      - internal
+
+  # ----------------------------------------
+  # Chatwoot
+  # ----------------------------------------
+  chatwoot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: chatwoot
+    restart: always
+    depends_on:
+      - redis
+      - db
+    environment:
+      RAILS_ENV: production
+      SECRET_KEY_BASE: 8127bd12c332a5afde0dfab7ba29b05c784cf5952f59a5f5ff924892711331fdbd5befe117951054c60755d8b2d15613fa3c6cfeae8203d1697147be79d9603c
+
+      INSTALLATION_ENV: docker      
+
+      POSTGRES_HOST: db
+      POSTGRES_DATABASE: chatwoot_db
+      POSTGRES_USERNAME: chatwoot_user
+      POSTGRES_PASSWORD: chatwoot_Admin_2025
+      DATABASE_URL: "postgresql://chatwoot_user:chatwoot_Admin_2025@db:5432/chatwoot_db"
+
+      REDIS_URL: redis://redis:6379
+
+      FRONTEND_URL: "https://chatwoot.traloitudong.com"
+      ACTION_CABLE_FRONTEND_URL: "wss://chatwoot.traloitudong.com/cable"
+      ALLOWED_CORS_ORIGINS: "https://chatwoot.traloitudong.com"
+      COOKIE_DOMAIN: ".traloitudong.com"
+
+      ENABLE_ACCOUNT_SIGNUP: "false"
+      RAILS_LOG_TO_STDOUT: "true"
+
+    ports:
+      - "3004:3000"
+    volumes:
+      - chatwoot_data:/app/storage
+    command: >
+      sh -c "
+        mkdir -p tmp/pids &&
+        bundle exec rails db:prepare &&
+        bundle exec puma -C config/puma.rb
+      "
+    networks:
+      - internal
+
+  # ----------------------------------------
+  # Botpress
+  # ----------------------------------------
+  botpress:
+    image: botpress/server:v12_28_0
+    container_name: botpress
+    restart: always
+    user: root
+    ports:
+      - "3001:3000"
+    environment:
+      - DATABASE=postgres
+      - DATABASE_URL=postgres://botpress_user:botpress_Admin_2025@db:5432/botpress_db
+    volumes:
+      - ./data:/botpress/data
+    depends_on:
+      - db
+    networks:
+      - internal
+
+  # ----------------------------------------
+  # Odoo + Init Script
+  # ----------------------------------------
+  odoo:
+    image: odoo:17
+    container_name: odoo
+    restart: always
+    depends_on:
+      - db
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_USER: odoo_user
+      POSTGRES_PASSWORD: odoo_Admin_2025
+      POSTGRES_DB: odoo_db
+    ports:
+      - "3005:8069"
+    volumes:
+      - odoo_data:/var/lib/odoo
+      - ./odoo-init.sh:/usr/local/bin/odoo-init.sh
+    command: ["/usr/local/bin/odoo-init.sh"]
+    networks:
+      - internal
+
+volumes:
+  postgres_data:
+  chatwoot_data:
+  redis_data:
+  odoo_data:
+  minio_data:
+
+networks:
+  internal:
+    driver: bridge
