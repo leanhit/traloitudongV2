@@ -1,93 +1,102 @@
 plugins {
-	id 'java'
-	id 'org.springframework.boot' version '3.4.3'
-	id 'io.spring.dependency-management' version '1.1.7'
+    id 'java'
+    id 'org.springframework.boot' version '3.4.3'
+    id 'io.spring.dependency-management' version '1.1.7'
 }
 
-group = 'com.example'
+group = 'com.chatbot'
 version = '0.0.1-SNAPSHOT'
 
 java {
-	toolchain {
-		languageVersion = JavaLanguageVersion.of(17)
-	}
-}
-
-configurations {
-	compileOnly {
-		extendsFrom annotationProcessor
-	}
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
 }
 
 repositories {
-	mavenCentral()
+    mavenCentral()
 }
 
 dependencies {
-	// Spring Boot Core Dependencies
-	implementation 'org.springframework.boot:spring-boot-starter-web'
-	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-	implementation 'org.springframework.boot:spring-boot-starter-security'
-	implementation 'org.springframework.boot:spring-boot-starter-validation' // Thêm Validation
-	
-	// Database
-	implementation("org.postgresql:postgresql:42.7.1")  // Đảm bảo phiên bản mới nhất
-    implementation("com.zaxxer:HikariCP:5.1.0")  // Pooling database connection
+    // -------------------------------
+    // Spring Boot Core
+    // -------------------------------
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'    // WebFlux cho reactive, CORS
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis' // Redis starter (Lettuce included)
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'  // WebSocket
 
-	// JWT Authentication
-	 implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+    // -------------------------------
+    // Database
+    // -------------------------------
+    implementation 'org.postgresql:postgresql:42.7.1'
+    implementation 'com.zaxxer:HikariCP:5.1.0'
+
+    // -------------------------------
+    // JWT
+    // -------------------------------
+    implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
     implementation 'io.jsonwebtoken:jjwt-impl:0.11.5'
-    implementation 'io.jsonwebtoken:jjwt-jackson:0.11.5' // hoặc jjwt-gson
+    implementation 'io.jsonwebtoken:jjwt-jackson:0.11.5'
 
-	// Lombok
-	compileOnly 'org.projectlombok:lombok'
-	annotationProcessor 'org.projectlombok:lombok'
+    // -------------------------------
+    // Lombok
+    // -------------------------------
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
 
-	// DevTools for Hot Reload
-	developmentOnly 'org.springframework.boot:spring-boot-devtools'
-	// Testing
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	testImplementation 'org.springframework.security:spring-security-test'
-	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-	 // Xử lý CORS
-    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+    // -------------------------------
+    // DevTools
+    // -------------------------------
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
 
-	// MapStruct for Object Mapping
-	implementation 'org.mapstruct:mapstruct:1.5.3.Final'  // Kiểm tra phiên bản mới nhất nếu cần
-    annotationProcessor 'org.mapstruct:mapstruct-processor:1.5.3.Final'  // Cần thiết cho annotation processing
+    // -------------------------------
+    // Testing
+    // -------------------------------
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-test'
 
-	    // Swagger annotations
+    // -------------------------------
+    // MapStruct
+    // -------------------------------
+    implementation 'org.mapstruct:mapstruct:1.5.3.Final'
+    annotationProcessor 'org.mapstruct:mapstruct-processor:1.5.3.Final'
+
+    // -------------------------------
+    // Swagger / OpenAPI
+    // -------------------------------
     implementation 'io.swagger.core.v3:swagger-annotations:2.2.1'
-
-    // SpringDoc for OpenAPI integration with Spring Boot
     implementation 'org.springdoc:springdoc-openapi-ui:1.6.9'
 
-    // Spring HATEOAS
-	implementation 'org.springframework.data:spring-data-commons:3.4.3'
+    // -------------------------------
+    // HATEOAS
+    // -------------------------------
+    implementation 'org.springframework.data:spring-data-commons:3.4.3'
     implementation 'org.springframework.hateoas:spring-hateoas:2.1.1'
 
-	// MinIO Client Library for S3-compatible object storage
+    // -------------------------------
+    // MinIO
+    // -------------------------------
     implementation 'io.minio:minio:8.5.1'
-	
-	// Thư viện Apache XML-RPC Client
-    implementation 'org.apache.xmlrpc:xmlrpc-client:3.1.3' 
-    // Thêm thư viện chung nếu chưa có
+
+    // -------------------------------
+    // Apache XML-RPC
+    // -------------------------------
+    implementation 'org.apache.xmlrpc:xmlrpc-client:3.1.3'
     implementation 'org.apache.xmlrpc:xmlrpc-common:3.1.3'
 }
 
 tasks.named('test') {
-	useJUnitPlatform()
-
-    // ⭐ ĐÃ THÊM: Cấu hình hệ thống JVM để khắc phục lỗi kết nối XML-RPC
+    useJUnitPlatform()
     systemProperties([
-        // Đặt nonProxyHosts để đảm bảo kết nối localhost không bị ảnh hưởng bởi proxy
-        'http.nonProxyHosts': 'localhost|127.0.0.1', 
+        'http.nonProxyHosts': 'localhost|127.0.0.1',
         'https.nonProxyHosts': 'localhost|127.0.0.1',
-
-        // Đảm bảo mã hóa UTF-8 được sử dụng nhất quán
-        'file.encoding': 'UTF-8', 
-        'sun.jnu.encoding': 'UTF-8' 
-    ])	
+        'file.encoding': 'UTF-8',
+        'sun.jnu.encoding': 'UTF-8'
+    ])
 }
 
 springBoot {

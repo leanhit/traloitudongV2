@@ -13,10 +13,18 @@ public class WebConfig {
         return new WebMvcConfigurer() {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
-                registry.addMapping("/api/**")                        
-                        .allowedOriginPatterns("*") // Cho phép tất cả các origin
-                        //.allowedOrigins("http://localhost:3000") // Cho phép frontend truy cập
+                // Ánh xạ cho REST API (/api/**)
+                registry.addMapping("/api/**")
+                        .allowedOriginPatterns("*") 
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
+                        .allowedHeaders("*")
+                        .allowCredentials(true);
+                        
+                // 💥 Ánh xạ cho WebSocket Handshake (/ws/takeover) và các tài nguyên gốc
+                // WebSocket handshake sử dụng HTTP GET/OPTIONS ban đầu, nên cần CORS.
+                registry.addMapping("/**")// Bao gồm /ws/takeover và các đường dẫn khác
+                        .allowedOriginPatterns("*")
+                        .allowedMethods("GET", "OPTIONS") // WS Handshake chủ yếu dùng GET
                         .allowedHeaders("*")
                         .allowCredentials(true);
             }

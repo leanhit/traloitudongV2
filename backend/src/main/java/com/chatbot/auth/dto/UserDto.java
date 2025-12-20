@@ -1,4 +1,3 @@
-
 // UserDto.java
 package com.chatbot.auth.dto;
 
@@ -12,5 +11,5 @@ import lombok.NoArgsConstructor;
 public class UserDto {
     private Long id;
     private String email;
-    private String role;
+    private String systemRole;
 }

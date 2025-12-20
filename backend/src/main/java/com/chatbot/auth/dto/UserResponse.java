@@ -1,4 +1,3 @@
-
 // UserResponse.java
 package com.chatbot.auth.dto;
 

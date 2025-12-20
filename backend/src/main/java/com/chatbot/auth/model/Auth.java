@@ -22,5 +22,10 @@ public class Auth {
     private String password;
 
     @Enumerated(EnumType.STRING)
-    private Role role;
+    private SystemRole systemRole;
+
+    @Builder.Default
+    @Column(name = "is_active", nullable = false, columnDefinition = "boolean default true")
+    private Boolean isActive = true;
 }
+

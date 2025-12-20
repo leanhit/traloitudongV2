@@ -47,14 +47,17 @@ public class SecurityConfig {
 
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
-        return (web) -> web.ignoring().requestMatchers("/api/auth/register", "/api/auth/login", "/error");
+        return (web) -> web.ignoring()
+                .requestMatchers("/api/auth/register", "/api/auth/login", "/error")
+                // 💥 FIX LỖI: Bỏ qua kiểm tra bảo mật cho endpoint WebSocket
+                .requestMatchers("/ws/takeover","/ws/takeover/**"); 
     }
 
     @Bean
     public CorsFilter corsFilter() {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         CorsConfiguration config = new CorsConfiguration();
-        config.addAllowedOrigin("https://traloitudong.com"); // Thêm URL frontend của bạn
+        config.addAllowedOrigin("https://cwsv.truyenthongviet.vn"); // Thêm URL frontend của bạn
         config.addAllowedMethod("*"); // Cho phép tất cả các phương thức
         config.addAllowedHeader("*"); // Cho phép tất cả các header
         config.setAllowCredentials(true);
@@ -66,10 +69,25 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtFilter jwtFilter, AuthenticationProvider authenticationProvider) throws Exception {
         http
             .csrf(AbstractHttpConfigurer::disable)
-            .cors(cors -> {}) // Sử dụng CorsFilter đã cấu hình
+            .cors(cors -> {})
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/webhooks/facebook/botpress/**").permitAll() 
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                
+                // --- CÁC API CẤP MASTER (CẦN AUTHENTICATED) ---
+                // Yêu cầu đăng nhập để biết ai là chủ sở hữu
+                .requestMatchers(HttpMethod.POST, "/api/tenant/create").authenticated() 
+                
+                // Lấy danh sách tenants của người dùng hiện tại (Cấp Master)
+                .requestMatchers(HttpMethod.GET, "/api/tenant").authenticated()      
+                
+                // Loại bỏ hoặc làm rõ mục này nếu nó trùng với /api/tenant/create
+                .requestMatchers(HttpMethod.POST, "/api/tenant").authenticated()      
+                
+                // --- CÁC API CẤP TENANT (CẦN AUTHENTICATED VÀ X-Tenant-ID) ---
+                .requestMatchers("/api/tenant/**").authenticated() // GET, PUT, DELETE chi tiết tenant
+                
+                // Mọi API khác (được cho là truy cập dữ liệu bên trong Tenant)
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
