@@ -1,5 +1,7 @@
 package com.chatbot.auth.model;
 
+import com.chatbot.userInfo.model.UserInfo;
+
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -27,5 +29,8 @@ public class Auth {
     @Builder.Default
     @Column(name = "is_active", nullable = false, columnDefinition = "boolean default true")
     private Boolean isActive = true;
+
+    @OneToOne(mappedBy = "auth", cascade = CascadeType.ALL)
+    private UserInfo userInfo;
 }
 

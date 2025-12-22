@@ -17,7 +17,7 @@ export const useImageStore = defineStore("imageStore", () => {
 
     // Hàm tiện ích convert URL
     function convertUrl(fileUrl: string) {
-        return fileUrl.replace('http://localhost:9000', 'https://image.traloitudong.com');
+        return fileUrl.replace('http://localhost:9000', 'https://image.truyenthongviet.vn');
     }
 
     async function getAllImages(page: number, size: number) {

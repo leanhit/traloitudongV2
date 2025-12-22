@@ -24,6 +24,18 @@
             <div id="sidebar-menu">
                 <ul>
                     <li class="menu-title">
+                        <strong>{{ t('Admin') }}</strong>
+                    </li>
+                    <li class="has_sub">
+                        <router-link to="/tenant">
+                            <i class="mdi mdi-code-tags"></i>
+                            <span>
+                                <strong>{{ t('Tenant Manager') }}</strong>
+                            </span>
+                            <span class="float-right"></span>
+                        </router-link>
+                    </li>
+                    <li class="menu-title">
                         <strong>{{ t('Tool') }}</strong>
                     </li>
                     <li class="has_sub">
@@ -111,6 +123,15 @@
                             <i class="mdi mdi-code-tags"></i>
                             <span>
                                 <strong>{{ t('Generate Embed Code') }}</strong>
+                            </span>
+                            <span class="float-right"></span>
+                        </router-link>
+                    </li>
+                    <li class="has_sub">
+                        <router-link to="/takeover">
+                            <i class="mdi mdi-code-tags"></i>
+                            <span>
+                                <strong>{{ t('Mess Manager') }}</strong>
                             </span>
                             <span class="float-right"></span>
                         </router-link>

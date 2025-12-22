@@ -39,7 +39,7 @@ export default {
         async function refreshDataFn() {
             isLoading.value = true;
             try {
-                await connectionStore.getAllConnections({ page: 0, size: 9999 });
+                await connectionStore.getConnectionsAll({ page: 0, size: 9999 });
                 tempList.value = connectionStore.connection.content || [];
 
                 // Khởi tạo dữ liệu mặc định (toàn bộ danh sách)
@@ -114,6 +114,19 @@ export default {
             }
         };
 
+        
+        /**
+         * 🔄 Cập nhật trạng thái active/inactive
+         */
+        const toggleActive = async (itemData: any, newActive: boolean) => {
+              // Thông báo tuỳ vào trạng thái active
+            if (itemData.active) {
+                ElMessage.success(t('Kết nối đầy đủ'));
+            } else {
+                ElMessage.warning(t('Fanpage đã bị gỡ khỏi App Facebook. Vào "tự động kết nối", chọn lại trang để kích hoạt lại. Nếu kết nối thật bại, hãy xóa kết nối này rồi thêm lại'));
+            }
+        };
+
         /**
          * 🔍 Theo dõi thay đổi của ô tìm kiếm
          */
@@ -165,6 +178,7 @@ export default {
             deleteConfig,
             formatDateTime,
             toggleStatus,
+            toggleActive
         };
     },
 };

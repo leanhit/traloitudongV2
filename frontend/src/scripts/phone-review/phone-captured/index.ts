@@ -10,7 +10,7 @@ export default {
             loadingComponent: SkeletonBox,
         }),
         EditTempUser: defineAsyncComponent({
-            loader: () => import('@/views/phone-review/phone-captured/components/AddTempUser.vue'),
+            loader: () => import('@/views/phone-review/phone-captured/components/List.vue'),
             loadingComponent: SkeletonBox,
         }),
     },

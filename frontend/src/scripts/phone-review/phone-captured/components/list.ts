@@ -88,13 +88,13 @@ export default {
                 // Không có query: Dùng danh sách gốc
                 paginatedData.value = tempList.value;
             } else {
-                console.log("1=============>",newVal,tempList.value)
+                //console.log("1=============>",newVal,tempList.value)
                 // Có query: Lọc dữ liệu trên client
                 paginatedData.value = filterDataFunction(
                     newVal,
                     tempList.value
                 );
-                console.log("2=============>",paginatedData.value)
+                //console.log("2=============>",paginatedData.value)
             }
 
             // Áp dụng phân trang lên dữ liệu mới (gốc hoặc đã lọc)

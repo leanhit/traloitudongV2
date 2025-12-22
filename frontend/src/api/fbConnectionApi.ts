@@ -18,6 +18,10 @@ export const fbConnectionApi = {
         return axios.get(`/connection/facebook`, params);
     },
 
+    getConnectionsAll(params: any) {
+        return axios.get(`/connection/facebook/all`, params);
+    },
+
     addConnection(params: any) {
         return axios.post(`/connection/facebook`, params);
     },

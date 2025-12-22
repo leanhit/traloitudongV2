@@ -57,7 +57,7 @@ public class SecurityConfig {
     public CorsFilter corsFilter() {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         CorsConfiguration config = new CorsConfiguration();
-        config.addAllowedOrigin("https://cwsv.truyenthongviet.vn"); // Thêm URL frontend của bạn
+        config.addAllowedOrigin("https://truyenthongviet.vn"); // Thêm URL frontend của bạn
         config.addAllowedMethod("*"); // Cho phép tất cả các phương thức
         config.addAllowedHeader("*"); // Cho phép tất cả các header
         config.setAllowCredentials(true);

@@ -1,4 +1,4 @@
-package com.chatbot.config;
+package com.chatbot.configs;
 
 import io.minio.MinioClient;
 import org.springframework.beans.factory.annotation.Value;

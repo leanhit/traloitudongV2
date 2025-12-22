@@ -4,13 +4,13 @@
         <p>Chào mừng bạn đến với middleware backend.</p>
 
         <div class="links">
-            <a href="https://cwsv.traloitudong.com" target="_blank"
+            <a href="https://cwsv.truyenthongviet.vn" target="_blank"
                 >🗄️ Truy cập Chatwoot SV</a
             >
-            <a href="https://chat.traloitudong.com" target="_blank"
+            <a href="https://chat.truyenthongviet.vn" target="_blank"
                 >💬 Truy cập Chatwoot UI</a
             >
-            <a href="https://bot.traloitudong.com" target="_blank"
+            <a href="https://bot.truyenthongviet.vn" target="_blank"
                 >🤖 Truy cập Botpress</a
             >
         </div>

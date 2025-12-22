@@ -84,7 +84,9 @@ export default {
         'pages_messaging',
         'pages_show_list',
         'pages_read_engagement',
-        'pages_manage_posts'
+        'pages_manage_posts',
+        'pages_messaging_subscriptions',
+        'pages_read_user_content'
       ];
 
       window.FB.login(

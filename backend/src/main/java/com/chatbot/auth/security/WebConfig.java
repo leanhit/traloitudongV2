@@ -1,4 +1,4 @@
-package com.chatbot.restaurant_admin.config;
+package com.chatbot.auth.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

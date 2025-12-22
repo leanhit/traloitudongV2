@@ -41,6 +41,18 @@ const routes = [
                 meta: { requiresAuth: true },
             },
             {
+                path: 'takeover',
+                name: 'takeover',
+                component: () => import('@/views/takeover/Index.vue'),
+                meta: { requiresAuth: true },
+            },
+            {
+                path: 'tenant',
+                name: 'tenant',
+                component: () => import('@/views/tenant/Index.vue'),
+                meta: { requiresAuth: true },
+            },
+            {
                 // Route cha cho Image Manager
                 path: 'image-manager',
                 name: 'image-manager',

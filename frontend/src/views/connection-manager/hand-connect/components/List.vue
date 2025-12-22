@@ -69,14 +69,14 @@
                                                 {{ t('PageID') }}
                                             </th>
                                             <th
-                                                style="width: 20%"
+                                                style="width: 10%"
                                                 class="text-nowrap">
-                                                {{ t('App Secret') }}
+                                                {{ t('Status') }}
                                             </th>
                                             <th
                                                 style="width: 10%"
                                                 class="text-nowrap">
-                                                {{ t('Status') }}
+                                                {{ t('Active') }}
                                             </th>
                                             <th
                                                 style="width: 10%"
@@ -123,13 +123,6 @@
                                             </td>
                                             <td
                                                 class="text-left text-truncate"
-                                                :title="itemData.appSecret">
-                                                <span class="truncate-text">{{
-                                                    itemData.appSecret
-                                                }}</span>
-                                            </td>
-                                            <td
-                                                class="text-left text-truncate"
                                                 :title="
                                                     itemData.enabled
                                                         ? t('Enabled')
@@ -154,6 +147,36 @@
                                                             itemData.enabled
                                                                 ? t('Enabled')
                                                                 : t('Disabled')
+                                                        }}
+                                                    </el-button>
+                                                </el-form-item>
+                                            </td>
+                                            <td
+                                                class="text-left text-truncate"
+                                                :title="
+                                                    itemData.enabled
+                                                        ? t('Avtive')
+                                                        : t('Inactive')
+                                                ">
+                                                <el-form-item
+                                                    class="text-nowrap pt-3">
+                                                    <el-button
+                                                        size="default"
+                                                        :type="
+                                                            itemData.active
+                                                                ? 'success'
+                                                                : 'info'
+                                                        "
+                                                        @click="
+                                                            toggleActive(
+                                                                itemData,
+                                                                !itemData.active
+                                                            )
+                                                        ">
+                                                        {{
+                                                            itemData.active
+                                                                ? t('Active')
+                                                                : t('Inactive')
                                                         }}
                                                     </el-button>
                                                 </el-form-item>

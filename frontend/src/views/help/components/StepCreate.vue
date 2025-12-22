@@ -42,7 +42,7 @@
                     <li>
                         <h6 class="font-weight-bold">
                             <a
-                                href="https://admin.traloitudong.com/home"
+                                href="https://admin.truyenthongviet.vn/home"
                                 target="_blank">
                                 1: Tạo cấu hình kết nối mới trên hệ thống admin
                                 botpress
@@ -56,7 +56,7 @@
                     <li>
                         <h6 class="font-weight-bold">
                             <a
-                                href="https://bot.traloitudong.com/admin/workspace/default/bots"
+                                href="https://bot.truyenthongviet.vn/admin/workspace/default/bots"
                                 target="_blank">
                                 2: Tạo app botpress trên botpress
                             </a>

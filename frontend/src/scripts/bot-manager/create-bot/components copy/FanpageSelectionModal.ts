@@ -33,7 +33,7 @@ export default defineComponent({
 
         const botIdOptions = ref([]);
 
-        console.log("=====>", props.bot)
+        //console.log("=====>", props.bot)
         const addConnections = async (pagesToConnect) => {
             if (!Array.isArray(pagesToConnect) || pagesToConnect.length === 0) {
                 ElMessage.error('Dữ liệu không hợp lệ. Vui lòng chọn ít nhất một trang.');

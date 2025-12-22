@@ -5,7 +5,7 @@ export default {
   props: ["viewSettings"],
   setup() {
     const { t } = useI18n();
-    const BOTPRESS_SERVER_URL = "https://bot.traloitudong.com";
+    const BOTPRESS_SERVER_URL = "https://bot.truyenthongviet.vn";
 
     const botId = ref("");
     const activeSection = ref("");
