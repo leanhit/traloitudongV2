@@ -2,22 +2,22 @@ package com.chatbot.address.mapper;
 
 import com.chatbot.address.dto.*;
 import com.chatbot.address.model.Address;
-import com.chatbot.userInfo.model.UserInfo;
 import org.springframework.stereotype.Component;
 
 @Component
 public class AddressMapper {
 
-    public Address toEntity(AddressRequestDTO dto, UserInfo user) {
+    public Address toEntity(Long tenantId, AddressRequestDTO dto) {
         return Address.builder()
+                .tenantId(tenantId)
                 .ownerType(dto.getOwnerType())
-                .user(user)
+                .ownerId(dto.getOwnerId())
                 .houseNumber(dto.getHouseNumber())
                 .street(dto.getStreet())
                 .ward(dto.getWard())
                 .city(dto.getCity())
                 .isDefault(dto.isDefault())
-                .country("Vietnam") // Default value
+                .country("Vietnam")
                 .build();
     }
 
@@ -33,7 +33,7 @@ public class AddressMapper {
         AddressDetailResponseDTO dto = new AddressDetailResponseDTO();
         dto.setId(entity.getId());
         dto.setOwnerType(entity.getOwnerType());
-        dto.setOwnerId(entity.getUser() != null ? entity.getUser().getId() : null);
+        dto.setOwnerId(entity.getOwnerId());
         dto.setHouseNumber(entity.getHouseNumber());
         dto.setStreet(entity.getStreet());
         dto.setWard(entity.getWard());
@@ -44,8 +44,11 @@ public class AddressMapper {
         return dto;
     }
 
-    private String buildFullAddress(Address entity) {
-        return String.format("%s %s, %s, %s", 
-            entity.getHouseNumber(), entity.getStreet(), entity.getWard(), entity.getCity());
+    private String buildFullAddress(Address e) {
+        return String.format("%s %s, %s, %s",
+                e.getHouseNumber() == null ? "" : e.getHouseNumber(),
+                e.getStreet(),
+                e.getWard(),
+                e.getCity());
     }
 }

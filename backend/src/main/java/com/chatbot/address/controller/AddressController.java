@@ -18,32 +18,45 @@ public class AddressController {
     private final AddressService addressService;
 
     @PostMapping
-    public ResponseEntity<AddressResponseDTO> create(@Valid @RequestBody AddressRequestDTO dto) {
-        return ResponseEntity.ok(addressService.createAddress(dto));
+    public ResponseEntity<AddressResponseDTO> create(
+            @RequestHeader("X-Tenant-Id") Long tenantId,
+            @Valid @RequestBody AddressRequestDTO dto) {
+
+        return ResponseEntity.ok(addressService.createAddress(tenantId, dto));
     }
 
     @GetMapping("/owner/{type}/{id}")
     public ResponseEntity<List<AddressResponseDTO>> getByOwner(
-            @PathVariable OwnerType type, 
+            @RequestHeader("X-Tenant-Id") Long tenantId,
+            @PathVariable OwnerType type,
             @PathVariable Long id) {
-        return ResponseEntity.ok(addressService.getAddressesByOwner(type, id));
+
+        return ResponseEntity.ok(addressService.getAddressesByOwner(tenantId, type, id));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<AddressDetailResponseDTO> getById(@PathVariable Long id) {
-        return ResponseEntity.ok(addressService.getAddressDetail(id));
+    public ResponseEntity<AddressDetailResponseDTO> getById(
+            @RequestHeader("X-Tenant-Id") Long tenantId,
+            @PathVariable Long id) {
+
+        return ResponseEntity.ok(addressService.getAddressDetail(tenantId, id));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<AddressResponseDTO> update(
-            @PathVariable Long id, 
+            @RequestHeader("X-Tenant-Id") Long tenantId,
+            @PathVariable Long id,
             @Valid @RequestBody AddressRequestDTO dto) {
-        return ResponseEntity.ok(addressService.updateAddress(id, dto));
+
+        return ResponseEntity.ok(addressService.updateAddress(tenantId, id, dto));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-        addressService.deleteAddress(id);
+    public ResponseEntity<Void> delete(
+            @RequestHeader("X-Tenant-Id") Long tenantId,
+            @PathVariable Long id) {
+
+        addressService.deleteAddress(tenantId, id);
         return ResponseEntity.noContent().build();
     }
 }

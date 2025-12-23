@@ -1,13 +1,20 @@
 package com.chatbot.userInfo.dto;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class UserInfoResponse {
     private Long id;
-    private String email;
+    private String email; // Lấy từ Auth entity thông qua UserInfo
     private String fullName;
     private String phoneNumber;
     private String avatar;
-    // Có thể bao gồm danh sách Address ở đây nếu cần
+    private String gender;
+    private String bio;
 }

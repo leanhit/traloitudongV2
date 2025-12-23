@@ -5,59 +5,51 @@ import com.chatbot.address.mapper.AddressMapper;
 import com.chatbot.address.model.Address;
 import com.chatbot.address.model.OwnerType;
 import com.chatbot.address.repository.AddressRepository;
-import com.chatbot.userInfo.model.UserInfo;
-import com.chatbot.userInfo.repository.UserInfoRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AddressService {
 
     private final AddressRepository addressRepository;
     private final AddressMapper addressMapper;
-    private final UserInfoRepository userInfoRepository;
 
     @Transactional
-    public AddressResponseDTO createAddress(AddressRequestDTO dto) {
-        UserInfo user = userInfoRepository.findById(dto.getOwnerId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
-                
+    public AddressResponseDTO createAddress(Long tenantId, AddressRequestDTO dto) {
         if (dto.isDefault()) {
-            resetDefaultAddress(dto.getOwnerType(), user.getId());
+            resetDefault(tenantId, dto.getOwnerType(), dto.getOwnerId());
         }
-        
-        Address address = addressMapper.toEntity(dto, user);
+        Address address = addressMapper.toEntity(tenantId, dto);
         return addressMapper.toResponseDTO(addressRepository.save(address));
     }
 
-    public List<AddressResponseDTO> getAddressesByOwner(OwnerType type, Long id) {
-        UserInfo user = userInfoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-                
-        return addressRepository.findByOwnerTypeAndUser(type, user)
+    public List<AddressResponseDTO> getAddressesByOwner(Long tenantId, OwnerType type, Long ownerId) {
+        return addressRepository
+                .findByTenantIdAndOwnerTypeAndOwnerId(tenantId, type, ownerId)
                 .stream()
                 .map(addressMapper::toResponseDTO)
-                .collect(Collectors.toList());
+                .toList();
     }
 
-    public AddressDetailResponseDTO getAddressDetail(Long id) {
-        Address address = addressRepository.findById(id)
+    public AddressDetailResponseDTO getAddressDetail(Long tenantId, Long id) {
+        Address address = addressRepository.findByIdAndTenantId(id, tenantId)
                 .orElseThrow(() -> new RuntimeException("Address not found"));
         return addressMapper.toDetailDTO(address);
     }
 
     @Transactional
-    public AddressResponseDTO updateAddress(Long id, AddressRequestDTO dto) {
-        Address address = addressRepository.findById(id)
+    public AddressResponseDTO updateAddress(Long tenantId, Long id, AddressRequestDTO dto) {
+        Address address = addressRepository.findByIdAndTenantId(id, tenantId)
                 .orElseThrow(() -> new RuntimeException("Address not found"));
 
         if (dto.isDefault() && !address.isDefault()) {
-            resetDefaultAddress(address.getOwnerType(), address.getUser().getId());
+            resetDefault(tenantId, address.getOwnerType(), address.getOwnerId());
         }
 
         address.setHouseNumber(dto.getHouseNumber());
@@ -70,15 +62,38 @@ public class AddressService {
     }
 
     @Transactional
-    public void deleteAddress(Long id) {
-        addressRepository.deleteById(id);
+    public void deleteAddress(Long tenantId, Long id) {
+        Address address = addressRepository.findByIdAndTenantId(id, tenantId)
+                .orElseThrow(() -> new RuntimeException("Address not found"));
+        addressRepository.delete(address);
     }
 
-    private void resetDefaultAddress(OwnerType type, Long userId) {
-        UserInfo user = userInfoRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-                
-        addressRepository.findByOwnerTypeAndUserAndIsDefaultTrue(type, user)
+    @Transactional
+    public void createEmptyAddressForUser(Long userId) {
+        // 1. Khởi tạo DTO
+        AddressRequestDTO emptyAddress = new AddressRequestDTO();
+        emptyAddress.setOwnerType(OwnerType.USER);
+        emptyAddress.setOwnerId(userId);
+        emptyAddress.setDefault(true);
+        emptyAddress.setStreet("");
+        emptyAddress.setHouseNumber("");
+        emptyAddress.setWard("");
+        emptyAddress.setCity("");
+
+        // 2. Thực hiện lưu
+        try {
+            // Sử dụng tenantId mặc định là 1 (hoặc lấy từ cấu hình hệ thống)
+            createAddress(1L, emptyAddress);
+            log.info("Đã tạo địa chỉ trống mặc định cho user ID: {}", userId);
+        } catch (Exception e) {
+            // Log lỗi để debug nhưng không làm crash quá trình đăng ký chính
+            log.error("Lỗi khi tạo địa chỉ mặc định cho user {}: {}", userId, e.getMessage());
+        }
+    }
+
+    private void resetDefault(Long tenantId, OwnerType type, Long ownerId) {
+        addressRepository
+                .findByTenantIdAndOwnerTypeAndOwnerIdAndIsDefaultTrue(tenantId, type, ownerId)
                 .ifPresent(addr -> {
                     addr.setDefault(false);
                     addressRepository.save(addr);

@@ -1,38 +1,69 @@
 package com.chatbot.address.model;
 
-import com.chatbot.userInfo.model.UserInfo;
-
 import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "addresses")
-@Getter @Setter
-@NoArgsConstructor 
+@Table(
+    name = "addresses",
+    indexes = {
+        @Index(name = "idx_address_tenant", columnList = "tenant_id"),
+        @Index(name = "idx_address_owner", columnList = "tenant_id, owner_type, owner_id")
+    }
+)
+@Getter
+@Setter
+@NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class Address {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    /**
+     * Tenant sở hữu address
+     */
+    @Column(name = "tenant_id", nullable = false)
+    private Long tenantId;
+
+    /**
+     * Loại owner: USER, END_USER, ORDER, SHOP...
+     */
     @Enumerated(EnumType.STRING)
-    @Column(name = "owner_type", nullable = false)
+    @Column(name = "owner_type", nullable = false, length = 30)
     private OwnerType ownerType;
 
-    private String houseNumber; // Số nhà
-    private String street;      // Tên đường
-    private String ward;        // Phường/Xã
-    private String district;    // Quận/Huyện
-    private String city;        // Tỉnh/Thành phố
-    private String province;    // Bang/Vùng (nếu có)
-    private String country;     // Quốc gia
+    /**
+     * ID của owner tương ứng với ownerType
+     */
+    @Column(name = "owner_id", nullable = false)
+    private Long ownerId;
+
+    // ===== Địa chỉ =====
+    @Column(name = "house_number", length = 50)
+    private String houseNumber;
+
+    @Column(length = 255)
+    private String street;
+
+    @Column(length = 255)
+    private String ward;
+
+    @Column(length = 255)
+    private String district;
+
+    @Column(length = 255)
+    private String city;
+
+    @Column(length = 255)
+    private String province;
+
+    @Column(length = 255)
+    private String country;
 
     @Builder.Default
-    @Column(name = "is_default")
+    @Column(name = "is_default", nullable = false)
     private boolean isDefault = false;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "owner_id", nullable = false)
-    private UserInfo user;
 }

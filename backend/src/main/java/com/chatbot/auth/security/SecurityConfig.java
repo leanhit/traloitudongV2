@@ -10,7 +10,6 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -19,19 +18,23 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.filter.CorsFilter;
+
+import java.util.Arrays;
 
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
 
+    // 1. Cấu hình Mã hóa mật khẩu
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
+    // 2. Cấu hình Authentication Provider
     @Bean
     public AuthenticationProvider authenticationProvider(UserDetailsService userDetailsService) {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
@@ -45,49 +48,53 @@ public class SecurityConfig {
         return config.getAuthenticationManager();
     }
 
+    // 3. Cấu hình CORS tập trung (Thay thế cho WebMvcConfigurer)
     @Bean
-    public WebSecurityCustomizer webSecurityCustomizer() {
-        return (web) -> web.ignoring()
-                .requestMatchers("/api/auth/register", "/api/auth/login", "/error")
-                // 💥 FIX LỖI: Bỏ qua kiểm tra bảo mật cho endpoint WebSocket
-                .requestMatchers("/ws/takeover","/ws/takeover/**"); 
-    }
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        
+        // Cho phép các nguồn cụ thể (Tránh dùng "*" khi có allowCredentials(true))
+        configuration.setAllowedOrigins(Arrays.asList(
+            "https://truyenthongviet.vn", 
+            "https://cwsv.truyenthongviet.vn",
+            "https://chat.truyenthongviet.vn",
+            "http://localhost:3000" // Cho phép dev local nếu cần
+        ));
+        
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Tenant-ID", "Cache-Control"));
+        configuration.setAllowCredentials(true);
+        configuration.setExposedHeaders(Arrays.asList("Authorization"));
 
-    @Bean
-    public CorsFilter corsFilter() {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        CorsConfiguration config = new CorsConfiguration();
-        config.addAllowedOrigin("https://truyenthongviet.vn"); // Thêm URL frontend của bạn
-        config.addAllowedMethod("*"); // Cho phép tất cả các phương thức
-        config.addAllowedHeader("*"); // Cho phép tất cả các header
-        config.setAllowCredentials(true);
-        source.registerCorsConfiguration("/**", config);
-        return new CorsFilter(source);
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 
+    // 4. Cấu hình Chuỗi lọc bảo mật (Security Filter Chain)
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtFilter jwtFilter, AuthenticationProvider authenticationProvider) throws Exception {
         http
             .csrf(AbstractHttpConfigurer::disable)
-            .cors(cors -> {})
+            // Kích hoạt CORS với cấu hình từ bean corsConfigurationSource ở trên
+            .cors(cors -> cors.configurationSource(corsConfigurationSource())) 
+            
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/webhooks/facebook/botpress/**").permitAll() 
-                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                // Public endpoints
+                .requestMatchers("/api/auth/**", "/error").permitAll()
+                .requestMatchers("/webhooks/facebook/botpress/**").permitAll()
                 
-                // --- CÁC API CẤP MASTER (CẦN AUTHENTICATED) ---
-                // Yêu cầu đăng nhập để biết ai là chủ sở hữu
-                .requestMatchers(HttpMethod.POST, "/api/tenant/create").authenticated() 
+                // WebSocket Handshake: Cho phép truy cập không cần token ban đầu
+                .requestMatchers("/ws/takeover/**").permitAll() 
                 
-                // Lấy danh sách tenants của người dùng hiện tại (Cấp Master)
-                .requestMatchers(HttpMethod.GET, "/api/tenant").authenticated()      
+                // Các API yêu cầu quyền Master
+                .requestMatchers(HttpMethod.POST, "/api/tenant/create").authenticated()
+                .requestMatchers(HttpMethod.GET, "/api/tenant").authenticated()
                 
-                // Loại bỏ hoặc làm rõ mục này nếu nó trùng với /api/tenant/create
-                .requestMatchers(HttpMethod.POST, "/api/tenant").authenticated()      
+                // Các API yêu cầu Tenant-ID (Xử lý logic kiểm tra trong Filter hoặc Service)
+                .requestMatchers("/api/tenant/**").authenticated()
                 
-                // --- CÁC API CẤP TENANT (CẦN AUTHENTICATED VÀ X-Tenant-ID) ---
-                .requestMatchers("/api/tenant/**").authenticated() // GET, PUT, DELETE chi tiết tenant
-                
-                // Mọi API khác (được cho là truy cập dữ liệu bên trong Tenant)
+                // Mọi request khác đều phải đăng nhập
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

@@ -29,11 +29,4 @@ public class UserInfo {
     
     @Column(name = "bio", length = 500)
     private String bio;
-
-    @OneToMany(
-        mappedBy = "user",
-        cascade = CascadeType.ALL,
-        orphanRemoval = true
-    )
-    private List<Address> addresses;
 }

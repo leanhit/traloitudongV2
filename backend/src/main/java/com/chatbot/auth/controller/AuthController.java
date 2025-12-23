@@ -13,18 +13,31 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
+
+import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
+@Slf4j
 public class AuthController {
 
     private final AuthService authService;
 
     @PostMapping("/register")
+    @Transactional
     public ResponseEntity<UserResponse> register(@RequestBody RegisterRequest request) {
-        UserResponse response = authService.register(request);
-        return ResponseEntity.ok(response);
+        log.info("Received registration request for email: {}", request.getEmail());
+        try {
+            log.debug("Starting user registration process...");
+            UserResponse response = authService.register(request);
+            log.info("User registered successfully with email: {}", request.getEmail());
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Registration failed for email: {}. Error: {}", request.getEmail(), e.getMessage(), e);
+            throw e; // Re-throw to let the global exception handler handle it
+        }
     }
 
     @PostMapping("/login")

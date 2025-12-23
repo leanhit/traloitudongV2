@@ -7,21 +7,22 @@ import lombok.Data;
 
 @Data
 public class AddressRequestDTO {
-    @NotNull(message = "Owner type is required")
+
+    @NotNull
     private OwnerType ownerType;
 
-    @NotNull(message = "Owner ID is required")
+    @NotNull
     private Long ownerId;
 
-    @NotBlank(message = "Street cannot be empty")
+    @NotBlank
     private String street;
 
     private String houseNumber;
-    
-    @NotBlank(message = "Ward is required")
+
+    @NotBlank
     private String ward;
 
-    @NotBlank(message = "City is required")
+    @NotBlank
     private String city;
 
     private boolean isDefault;

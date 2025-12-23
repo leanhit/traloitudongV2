@@ -12,3 +12,8 @@ docker compose up -d
 docker compose -p traloitudongV2 down -v --rmi all --remove-orphans
 docker compose down -v
 
+===================================================================
+
+docker exec -it traloitudong_postgres psql -U postgres -d postgres
+
+\c odoo_db;
