@@ -13,7 +13,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -32,11 +31,13 @@ public class JwtFilter extends OncePerRequestFilter {
     public JwtFilter(JwtService jwtService, AuthService authService) {
         this.jwtService = jwtService;
         this.authService = authService;
-        this.objectMapper = new ObjectMapper(); // Khởi tạo ObjectMapper để chuyển đối tượng sang JSON
+        this.objectMapper = new ObjectMapper();
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+    protected void doFilterInternal(HttpServletRequest request, 
+                                  HttpServletResponse response, 
+                                  FilterChain filterChain)
             throws ServletException, IOException {
 
         String authHeader = request.getHeader("Authorization");
@@ -48,42 +49,56 @@ public class JwtFilter extends OncePerRequestFilter {
             try {
                 email = jwtService.getEmailFromToken(token);
             } catch (ExpiredJwtException e) {
-                // Xử lý khi token hết hạn
-                sendErrorResponse(response, "Token đã hết hạn.");
-                return; // Ngăn không cho filter chain tiếp tục
+                sendErrorResponse(response, "Token đã hết hạn");
+                return;
             } catch (SignatureException | MalformedJwtException e) {
-                // Xử lý khi chữ ký token không hợp lệ hoặc token bị lỗi
-                sendErrorResponse(response, "Token không hợp lệ.");
-                return; // Ngăn không cho filter chain tiếp tục
+                sendErrorResponse(response, "Token không hợp lệ");
+                return;
             } catch (Exception e) {
-                // Xử lý các lỗi khác
-                sendErrorResponse(response, "Lỗi khi xử lý token.");
-                return; // Ngăn không cho filter chain tiếp tục
+                sendErrorResponse(response, "Lỗi khi xử lý token");
+                return;
             }
         }
 
         if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = authService.loadUserByUsername(email);
+            try {
+                CustomUserDetails userDetails = (CustomUserDetails) authService.loadUserByUsername(email);
 
-            if (jwtService.validateToken(token, userDetails)) {
-                UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-                authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+                if (jwtService.validateToken(token, userDetails)) {
+                    UsernamePasswordAuthenticationToken authenticationToken = 
+                        new UsernamePasswordAuthenticationToken(
+                            userDetails,
+                            null,
+                            userDetails.getAuthorities()
+                        );
+                    
+                    authenticationToken.setDetails(
+                        new WebAuthenticationDetailsSource().buildDetails(request)
+                    );
+                    
+                    SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+                    
+                    // Log thông tin xác thực
+                    logger.info("Đã xác thực user: " + email + ", roles: " + 
+                              userDetails.getAuthorities());
+                }
+            } catch (ClassCastException e) {
+                logger.error("Lỗi khi ép kiểu UserDetails sang CustomUserDetails", e);
+                sendErrorResponse(response, "Lỗi xác thực người dùng");
+                return;
+            } catch (Exception e) {
+                logger.error("Lỗi khi xác thực người dùng", e);
+                sendErrorResponse(response, "Lỗi xác thực người dùng");
+                return;
             }
         }
         
         filterChain.doFilter(request, response);
     }
 
-    /**
-     * Gửi phản hồi lỗi về client với mã HTTP 401 và thông báo JSON.
-     * @param response Đối tượng HttpServletResponse
-     * @param message Thông báo lỗi
-     * @throws IOException
-     */
     private void sendErrorResponse(HttpServletResponse response, String message) throws IOException {
-        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // Đặt mã lỗi HTTP 401
-        response.setContentType(MediaType.APPLICATION_JSON_VALUE); // Đặt Content-Type là application/json
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding("UTF-8");
 
         Map<String, Object> errorDetails = new HashMap<>();
@@ -91,7 +106,6 @@ public class JwtFilter extends OncePerRequestFilter {
         errorDetails.put("message", message);
         errorDetails.put("status", HttpServletResponse.SC_UNAUTHORIZED);
 
-        String json = objectMapper.writeValueAsString(errorDetails);
-        response.getWriter().write(json);
+        objectMapper.writeValue(response.getWriter(), errorDetails);
     }
 }

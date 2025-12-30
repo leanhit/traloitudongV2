@@ -4,5 +4,7 @@ public enum TenantRole {
     OWNER,
     ADMIN,
     EDITOR,
-    VIEWER
+    VIEWER,
+    MEMBER,
+    NONE
 }

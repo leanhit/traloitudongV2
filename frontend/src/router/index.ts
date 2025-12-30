@@ -1,6 +1,7 @@
 // src/router/index.ts
 import { createRouter, createWebHistory } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
+import { useTenantStore } from '@/stores/tenantStore';
 import ZoterDefault from '@/layouts/ZoterDefault.vue';
 
 const routes = [
@@ -10,133 +11,129 @@ const routes = [
         component: () => import('@/views/Login.vue'),
     },
     {
+        path: '/tenant-gateway',
+        name: 'tenant-gateway',
+        component: () => import('@/views/tenant/gateway/Index.vue'),
+        meta: { requiresAuth: true },
+    },
+    {
         path: '/',
         component: ZoterDefault,
         name: 'LayoutZoter',
         redirect: '/home',
+        meta: { requiresAuth: true }, // Bảo vệ tất cả route con
         children: [
             {
-                path: '',
+                path: 'home',
                 name: 'home',
                 component: () => import('@/views/Home.vue'),
-                meta: { requiresAuth: true },
             },
             {
                 path: 'help',
                 name: 'help',
                 component: () => import('@/views/help/Index.vue'),
-                meta: { requiresAuth: true },
             },
             {
                 path: 'generate-embed-code',
                 name: 'generate-embed-code',
-                component: () =>
-                    import('@/views/generate-embed-code/Index.vue'),
-                meta: { requiresAuth: true },
+                component: () => import('@/views/generate-embed-code/Index.vue'),
             },
             {
                 path: 'profile',
                 name: 'profile',
                 component: () => import('@/views/profile/Index.vue'),
-                meta: { requiresAuth: true },
             },
             {
                 path: 'takeover',
                 name: 'takeover',
                 component: () => import('@/views/takeover/Index.vue'),
-                meta: { requiresAuth: true },
             },
             {
                 path: 'tenant',
                 name: 'tenant',
                 component: () => import('@/views/tenant/Index.vue'),
-                meta: { requiresAuth: true },
             },
+            // Image Manager
             {
-                // Route cha cho Image Manager
                 path: 'image-manager',
                 name: 'image-manager',
-                redirect: { name: 'images' }, // Tự động chuyển hướng đến route con đầu tiên
-                component: () => import('@/views/image-manager/ImageManagerLayout.vue'), // Tạo một layout cha
-                meta: { requiresAuth: true },
+                redirect: { name: 'images' },
+                component: () => import('@/views/image-manager/ImageManagerLayout.vue'),
                 children: [
                     {
                         path: 'images',
                         name: 'images',
                         component: () => import('@/views/image-manager/image/Index.vue'),
-                        meta: { requiresAuth: true, title: 'Image List' },
+                        meta: { title: 'Image List' },
                     },
                     {
                         path: 'categories',
                         name: 'categories',
                         component: () => import('@/views/image-manager/category/Index.vue'),
-                        meta: { requiresAuth: true, title: 'Category List' },
+                        meta: { title: 'Category List' },
                     },
                 ],
             },
+            // Bot Manager
             {
-                // Route cha cho bot Manager
                 path: 'bot-manager',
                 name: 'bot-manager',
-                redirect: { name: 'images' }, // Tự động chuyển hướng đến route con đầu tiên
-                component: () => import('@/views/bot-manager/BotManagerLayout.vue'), // Tạo một layout cha
-                meta: { requiresAuth: true },
+                redirect: { name: 'create-bot' }, // Sửa lại redirect đúng name
+                component: () => import('@/views/bot-manager/BotManagerLayout.vue'),
                 children: [
                     {
                         path: 'create-bot',
                         name: 'create-bot',
                         component: () => import('@/views/bot-manager/create-bot/Index.vue'),
-                        meta: { requiresAuth: true, title: 'Midleware Bot List' },
+                        meta: { title: 'Middleware Bot List' },
                     },
                     {
                         path: 'bot-botpress',
                         name: 'bot-botpress',
                         component: () => import('@/views/bot-manager/bot-botpress/Index.vue'),
-                        meta: { requiresAuth: true, title: 'Botpress Bot List' },
+                        meta: { title: 'Botpress Bot List' },
                     },
                 ],
             },
+            // Connection Manager
             {
-                // Route cha cho connection Manager
                 path: 'connection-manager',
                 name: 'connection-manager',
-                redirect: { name: 'images' }, // Tự động chuyển hướng đến route con đầu tiên
-                component: () => import('@/views/connection-manager/ConnectionManagerLayout.vue'), // Tạo một layout cha
-                meta: { requiresAuth: true },
+                redirect: { name: 'auto-connect' },
+                component: () => import('@/views/connection-manager/ConnectionManagerLayout.vue'),
                 children: [
                     {
                         path: 'auto-connect',
                         name: 'auto-connect',
                         component: () => import('@/views/connection-manager/auto-connect/Index.vue'),
-                        meta: { requiresAuth: true, title: 'Midleware Bot List' },
+                        meta: { title: 'Auto Connect List' },
                     },
                     {
                         path: 'hand-connect',
                         name: 'hand-connect',
                         component: () => import('@/views/connection-manager/hand-connect/Index.vue'),
-                        meta: { requiresAuth: true, title: 'Botpress Bot List' },
+                        meta: { title: 'Hand Connect List' },
                     },
                 ],
             },
+            // Phone Review
             {
-                // Route cha cho connection Manager
                 path: 'phone-review',
                 name: 'phone-review',
-                redirect: { name: 'images' }, // Tự động chuyển hướng đến route con đầu tiên
-                component: () => import('@/views/phone-review/PhoneReviewLayout.vue'), // Tạo một layout cha
-                meta: { requiresAuth: true },
+                redirect: { name: 'temp-user' },
+                component: () => import('@/views/phone-review/PhoneReviewLayout.vue'),
                 children: [
                     {
                         path: 'temp-user',
                         name: 'temp-user',
                         component: () => import('@/views/phone-review/temp-user/Index.vue'),
-                        meta: { requiresAuth: true, title: 'Midleware Bot List' },
+                        meta: { title: 'Temp User List' },
                     },
                     {
                         path: 'phone-captured',
                         name: 'phone-captured',
                         component: () => import('@/views/phone-review/phone-captured/Index.vue'),
-                        meta: { requiresAuth: true, title: 'Botpress Bot List' },
+                        meta: { title: 'Phone Captured List' },
                     },
                 ],
             },
@@ -149,17 +146,34 @@ const router = createRouter({
     routes,
 });
 
-router.beforeEach((to, from, next) => {
+// Navigation Guard
+router.beforeEach(async (to, from, next) => {
     const authStore = useAuthStore();
+    const tenantStore = useTenantStore();
 
-    // Nếu đã đăng nhập mà vào lại login → chuyển về home
-    if (authStore.token && to.name === 'login') {
-        return next({ name: 'home' });
+    const token = authStore.token;
+    // Kiểm tra tenant từ store hoặc localStorage
+    const activeTenantId = tenantStore.currentTenant?.id;
+
+    // 1. Nếu chưa đăng nhập
+    if (!token) {
+        if (to.meta.requiresAuth) {
+            return next({ name: 'login', query: { redirect: to.fullPath } });
+        }
+        return next();
     }
 
-    // Nếu chưa đăng nhập mà vào trang yêu cầu auth
-    if (!authStore.token && to.meta.requiresAuth) {
-        return next({ name: 'login' });
+    // 2. Nếu đã đăng nhập mà cố vào login
+    if (to.name === 'login') {
+        return activeTenantId ? next({ name: 'home' }) : next({ name: 'tenant-gateway' });
+    }
+
+    // 3. Nếu đã đăng nhập nhưng chưa chọn Tenant (và không phải đang ở trang chọn tenant)
+    if (to.meta.requiresAuth && !activeTenantId && to.name !== 'tenant-gateway') {
+        return next({ 
+            name: 'tenant-gateway', 
+            query: { redirect: to.fullPath } 
+        });
     }
 
     next();

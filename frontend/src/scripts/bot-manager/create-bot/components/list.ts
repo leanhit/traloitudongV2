@@ -1,7 +1,7 @@
 import { useI18n } from 'vue-i18n';
 import { ref, reactive, watch } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import { filterDataFunction, splitData, formatDateTime } from '@/until/search';
+import { filterDataFunction, splitData, formatDateTime } from '@/utils/search';
 import { botApi } from '@/api/botApi';
 import { useSearchStore } from '@/stores/search';
 import { useBotStore } from '@/stores/botStore';

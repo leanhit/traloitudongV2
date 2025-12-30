@@ -62,6 +62,10 @@
             <div class="dropdown-item noti-title">
               <h5>{{ user?.email || "User" }}</h5>
             </div>
+            <router-link to="/tenant-gateway" class="dropdown-item">
+              <i class="mdi mdi-help-circle m-r-5 text-muted"></i>
+              {{ t("Switch Workspacse") }}
+            </router-link>
             <router-link to="/profile" class="dropdown-item">
               <i class="mdi mdi-account-circle m-r-5 text-muted"></i>
               {{ t("Profile") }}
@@ -120,7 +124,7 @@ import { ref, onMounted, computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { storeToRefs } from "pinia";
 import { useRouter } from "vue-router";
-import { supportedLocales, currentLanguage } from "@/until/constant";
+import { supportedLocales, currentLanguage } from "@/utils/constant";
 import { useAuthStore } from "@/stores/auth";
 import SearchBox from "./SearchBox.vue";
 

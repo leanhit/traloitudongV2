@@ -1,8 +1,8 @@
 import { useI18n } from 'vue-i18n';
 import { ref, reactive, watch, onMounted } from 'vue';
 import { ElMessage } from 'element-plus';
-import { splitData } from '@/until/search';
-import { exportDataAsJson } from '@/until/writeFile';
+import { splitData } from '@/utils/search';
+import { exportDataAsJson } from '@/utils/writeFile';
 import { useWorkspaceStore } from '@/stores/botpressStore';
 import { botApi } from '@/api/botApi';
 

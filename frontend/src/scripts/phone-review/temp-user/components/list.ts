@@ -2,7 +2,7 @@ import { useI18n } from 'vue-i18n';
 import { ref, reactive, watch } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 // Đã sử dụng các hàm này từ file bạn cung cấp:
-import { filterDataFunction, splitData, formatDateTime } from '@/until/search';
+import { filterDataFunction, splitData, formatDateTime } from '@/utils/search';
 import { tempUsersApi } from '@/api/tempUserApi'; // API cho Temp Users
 import { useTempUsersStore } from '@/stores/tempUser';
 import { useSearchStore } from '@/stores/search';

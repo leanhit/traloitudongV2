@@ -1,7 +1,8 @@
+package com.chatbot.modules.tenant.infra;
+
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import com.chatbot.modules.tenant.infra.TenantResolverFilter;
 
 @Configuration
 public class FilterConfig {

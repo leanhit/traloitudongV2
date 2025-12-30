@@ -21,26 +21,36 @@ public class TenantMember {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Tenant
+    // Liên kết tới Tenant
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "tenant_id", nullable = false)
     private Tenant tenant;
 
-    // Auth
+    // Liên kết tới User (Auth)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private Auth user;
 
+    // Vai trò trong Tenant (OWNER, ADMIN, MEMBER)
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private TenantRole role;
 
+    // Trạng thái thành viên (Thay thế hoàn toàn cho biến active cũ)
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     @Builder.Default
-    private boolean active = true;
+    private MembershipStatus status = MembershipStatus.PENDING;
 
-    // --- audit ---
+    // --- Audit fields ---
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+    
+    @Column(name = "joined_at")
+    private LocalDateTime joinedAt;
 
     @PrePersist
     protected void onCreate() {
@@ -51,5 +61,10 @@ public class TenantMember {
     @PreUpdate
     protected void onUpdate() {
         this.updatedAt = LocalDateTime.now();
+    }
+
+    // Helper method để kiểm tra nhanh quyền truy cập
+    public boolean isActiveMember() {
+        return MembershipStatus.ACTIVE.equals(this.status);
     }
 }

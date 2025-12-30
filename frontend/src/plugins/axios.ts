@@ -1,8 +1,6 @@
 // /src/plugins/axios.ts (hoặc .js)
-
 import axios from 'axios';
 import { useAuthStore } from '@/stores/auth';
-import { useTenantStore } from '@/stores/tenantStore'; // <<< Cần import Tenant Store
 import router from '@/router';
 
 const instance = axios.create({
@@ -13,29 +11,37 @@ const instance = axios.create({
     },
 });
 
+// Danh sách các API KHÔNG cần đính kèm Tenant ID (Global APIs)
+const EXCLUDED_PATHS = [
+    '/auth/login',
+    '/auth/register',
+    '/auth/forgot-password', // Loại trừ quên mật khẩu
+    '/auth/reset-password',  // Loại trừ đặt lại mật khẩu
+    '/users/change-password',// Loại trừ đổi mật khẩu khi đã login
+    '/tenants/search',
+    '/tenants/my-list'
+];
+
 instance.interceptors.request.use(
     (config) => {
-        // 1. Xử lý JWT (Authorization)
+        // 1. Xử lý JWT
         const token = localStorage.getItem('accessToken');
+        //console.log('Request interceptor - Token:', token); // Thêm dòng này để debug
+        //console.log('Request URL:', config.url); // Log URL được gọi
+        
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
 
-        // 2. XỬ LÝ TENANT ID (Multi-Tenancy Context)
-        const ACTIVE_TENANT_ID_KEY = 'ACTIVE_TENANT_ID'; // Đảm bảo khớp với Pinia store
-        const activeTenantId = localStorage.getItem(ACTIVE_TENANT_ID_KEY);
+        // 2. XỬ LÝ TENANT ID VỚI BỘ LỌC
+        const activeTenantId = localStorage.getItem('ACTIVE_TENANT_ID');
+        
+        // Kiểm tra xem URL hiện tại có nằm trong danh sách loại trừ không
+        const isExcluded = EXCLUDED_PATHS.some(path => config.url?.includes(path));
 
-        // Đính kèm Tenant ID nếu tồn tại
-        if (activeTenantId) {
+        if (activeTenantId && !isExcluded) {
             config.headers['X-Tenant-ID'] = activeTenantId;
-
-            // <<< LOG ĐỂ KIỂM TRA >>>
-            console.log(`[AXIOS INTERCEPTOR] Tenant ID found. Setting X-Tenant-ID: ${activeTenantId}`);
-            // <<< LOG ĐỂ KIỂM TRA >>>
-        } else {
-            // <<< LOG ĐỂ KIỂM TRA >>>
-            console.log(`[AXIOS INTERCEPTOR] No active Tenant ID found in localStorage for request to ${config.url}`);
-            // <<< LOG ĐỂ KIỂM TRA >>>
+            // console.log(`[Tenant Context] Applied ID: ${activeTenantId} for ${config.url}`);
         }
 
         return config;
@@ -44,9 +50,18 @@ instance.interceptors.request.use(
 );
 
 instance.interceptors.response.use(
-    (response) => response,
+    (response) => {
+        //console.log('Response:', response.config.url, response.status); // Log response thành công
+        return response;
+    },
     (error) => {
-        if (error.response && error.response.status === 401) {
+        console.error('Response error:', { // Log chi tiết lỗi
+            url: error.config?.url,
+            status: error.response?.status,
+            data: error.response?.data
+        });
+        
+        if (error.response?.status === 401) {
             const authStore = useAuthStore();
             authStore.logout();
             router.push({ name: 'login' });

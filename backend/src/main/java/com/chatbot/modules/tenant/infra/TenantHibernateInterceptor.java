@@ -1,8 +1,9 @@
+package com.chatbot.modules.tenant.infra;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
-import com.chatbot.modules.tenant.infra.HibernateTenantFilter;
 
 @Component
 public class TenantHibernateInterceptor implements HandlerInterceptor {

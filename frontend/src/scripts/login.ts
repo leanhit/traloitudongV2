@@ -4,11 +4,12 @@ import { ref } from 'vue';
 import { usersApi } from '@/api/usersApi';
 import { ElMessage } from 'element-plus';
 import { useAuthStore } from '@/stores/auth';
+import { useTenantStore } from '@/stores/tenantStore';
 
 export default {
     props: ['viewSettings'],
     emits: ['onChangeView'],
-    setup(props, context) {
+    setup(props: any, context: any) {
         const { t } = useI18n();
         const router = useRouter();
         const authStore = useAuthStore();
@@ -33,7 +34,7 @@ export default {
             emptyFields.value = false;
         }
 
-        function isValidEmail(email) {
+        function isValidEmail(email: string): boolean {
             const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             return regex.test(email);
         }
@@ -58,12 +59,23 @@ export default {
 
                 if (response.status === 200) {
                     const { token, user } = response.data;
-                    authStore.login(token, user);
-                    await router.push('/');
+                    await authStore.login(token, user);
+                    
+                    // Check if user has an active tenant
+                    const tenantStore = useTenantStore();
+                    //await tenantStore.initializeTenantContext();
+                    
+                    if (!tenantStore.currentTenant) {
+                        // No active tenant, redirect to tenant gateway
+                        await router.push({ name: 'tenant-gateway' });
+                    } else {
+                        // Has active tenant, go to home
+                        await router.push('/');
+                    }
                 } else {
                     ElMessage.error(t(`Oops, ${response.data.message}`));
                 }
-            } catch (error) {
+            } catch (error: any) {
                 console.error('Login error:', error);
                 const errorMessage =
                     error.response?.data?.message ||
@@ -109,9 +121,9 @@ export default {
                 } else {
                     ElMessage.error(t(`Oops, ${response.data.message}`));
                 }
-            } catch (error) {
-                console.error('Registration error:', error);
-                const status = error.response?.status;
+            } catch (err: any) {
+                console.error('Registration error:', err);
+                const status = err.response?.status;
                 if (status === 409) {
                     ElMessage.error(
                         t('Email already exists. Please use a different email.')

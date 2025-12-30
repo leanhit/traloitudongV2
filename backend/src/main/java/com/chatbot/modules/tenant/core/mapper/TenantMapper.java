@@ -16,6 +16,7 @@ public class TenantMapper {
         return Tenant.builder()
                 .name(request.getName())
                 .status(TenantStatus.ACTIVE)
+                .visibility(request.getVisibility())
                 .expiresAt(LocalDateTime.now().plusDays(30)) // trial
                 .build();
     }
@@ -26,6 +27,7 @@ public class TenantMapper {
                 .id(tenant.getId())
                 .name(tenant.getName())
                 .status(tenant.getStatus())
+                .visibility(tenant.getVisibility())
                 .expiresAt(tenant.getExpiresAt())
                 .createdAt(tenant.getCreatedAt())
                 .build();

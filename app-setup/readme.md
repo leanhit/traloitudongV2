@@ -16,4 +16,11 @@ docker compose down -v
 
 docker exec -it traloitudong_postgres psql -U postgres -d postgres
 
-\c odoo_db;
+drop database traloitudong_db;
+
+-- Kết nối vào template1 và chạy:
+ALTER DATABASE template1 REFRESH COLLATION VERSION;
+
+-- Sau đó thử lại lệnh tạo DB:
+CREATE DATABASE traloitudong_db OWNER traloitudong_user;
+

@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import axios from '@/plugins/axios'; // dùng instance đã tạo
 import router from '@/router';
+import { useTenantStore } from './tenantStore';
 
 interface User {
   id: number;
@@ -24,21 +25,28 @@ export const useAuthStore = defineStore('auth', {
       if (user) this.user = JSON.parse(user);
     },
 
-    login(token: string, user: User) {
+    async login(token: string, user: User) {
       this.token = token;
       this.user = user;
 
       localStorage.setItem('accessToken', token);
       localStorage.setItem('user', JSON.stringify(user));
+      
+      // Initialize tenant context after login
+      //const tenantStore = useTenantStore();
+      //await tenantStore.initializeTenantContext();
     },
 
     logout() {
+      const tenantStore = useTenantStore();
+      tenantStore.clearTenant();
       this.token = null;
       this.user = null;
 
       localStorage.removeItem('accessToken');
       localStorage.removeItem('user');
 
+      tenantStore.clearTenant();
       router.push({ name: 'login' });
     },
 

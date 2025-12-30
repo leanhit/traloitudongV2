@@ -1,74 +1,138 @@
 package com.chatbot.modules.tenant.membership.controller;
 
 import com.chatbot.modules.auth.model.Auth;
-import com.chatbot.modules.tenant.membership.dto.MemberResponse;
-import com.chatbot.modules.tenant.membership.dto.UpdateMemberRoleRequest;
-import com.chatbot.modules.tenant.membership.model.TenantRole;
-import com.chatbot.modules.tenant.membership.service.TenantMembershipService;
+import com.chatbot.modules.tenant.membership.dto.*;
+import com.chatbot.modules.tenant.membership.service.TenantMembershipFacade;
+
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import jakarta.validation.Valid;
+import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RestController
-@RequestMapping("/api/tenants/{tenantId}/members")
 @RequiredArgsConstructor
+@RequestMapping("/api/tenants/{tenantId}/members")
 public class TenantMemberController {
 
-    private final TenantMembershipService membershipService;
+    private final TenantMembershipFacade facade;
 
+    /* =====================================================
+     * 2️⃣ JOIN REQUESTS (User → Tenant)
+     * ===================================================== */
+
+    /**
+     * POST /tenants/{tenantId}/members/join-requests
+     */
+    @PostMapping("/join-requests")
+    public void requestJoin(
+            @PathVariable Long tenantId,
+            @AuthenticationPrincipal(expression = "auth") Auth user, // Thêm (expression = "auth")
+            HttpServletRequest request
+    ) {
+        // Lúc này user sẽ không còn null nữa
+        facade.requestJoin(tenantId, user);
+    }
+
+    /**
+     * GET /tenants/{tenantId}/members/join-requests
+     */
+    @GetMapping("/join-requests")
+    public List<MemberResponse> listJoinRequests(
+            @PathVariable Long tenantId
+    ) {
+        return facade.pending(tenantId);
+    }
+
+    /**
+     * PATCH /tenants/{tenantId}/members/join-requests/{requestId}
+     */
+    @PatchMapping("/join-requests/{requestId}")
+    public void updateJoinRequest(
+            @PathVariable Long tenantId,
+            @PathVariable Long requestId,
+            @RequestBody UpdateJoinRequest request
+    ) {
+        facade.updateJoinRequest(tenantId, requestId, request.getStatus());
+    }
+
+    /* =====================================================
+     * 3️⃣ TENANT MEMBERS (ADMIN MANAGEMENT)
+     * ===================================================== */
+
+    /**
+     * GET /tenants/{tenantId}/members
+     */
     @GetMapping
     public Page<MemberResponse> listMembers(
             @PathVariable Long tenantId,
-            @PageableDefault(size = 20) Pageable pageable,
-            @AuthenticationPrincipal Auth currentUser) {
-        // TODO: Kiểm tra quyền - chỉ ADMIN hoặc OWNER mới được xem danh sách
-        return membershipService.listMembers(tenantId, pageable);
+            Pageable pageable
+    ) {
+        return facade.listMembers(tenantId, pageable);
     }
 
+    /**
+     * GET /tenants/{tenantId}/members/{userId}
+     */
     @GetMapping("/{userId}")
     public MemberResponse getMember(
             @PathVariable Long tenantId,
-            @PathVariable Long userId,
-            @AuthenticationPrincipal Auth currentUser) {
-        // TODO: Kiểm tra quyền - chỉ xem được thông tin của chính mình hoặc ADMIN/OWNER
-        return membershipService.getMember(tenantId, userId);
+            @PathVariable Long userId
+    ) {
+        return facade.getMember(tenantId, userId);
     }
 
+    /**
+     * PUT /tenants/{tenantId}/members/{userId}/role
+     */
     @PutMapping("/{userId}/role")
-    public ResponseEntity<Void> updateMemberRole(
+    public void updateRole(
             @PathVariable Long tenantId,
             @PathVariable Long userId,
-            @Valid @RequestBody UpdateMemberRoleRequest request,
-            @AuthenticationPrincipal Auth currentUser) {
-        // TODO: Kiểm tra quyền - chỉ ADMIN/OWNER mới được đổi role
-        membershipService.updateMemberRole(tenantId, userId, request);
-        return ResponseEntity.noContent().build();
+            @RequestBody UpdateRoleRequest request
+    ) {
+        facade.updateRole(tenantId, userId, request.getRole());
     }
 
+    /**
+     * DELETE /tenants/{tenantId}/members/{userId}
+     */
     @DeleteMapping("/{userId}")
-    public ResponseEntity<Void> removeMember(
+    public void removeMember(
             @PathVariable Long tenantId,
-            @PathVariable Long userId,
-            @AuthenticationPrincipal Auth currentUser) {
-        // TODO: Kiểm tra quyền - chỉ ADMIN/OWNER mới được xóa thành viên
-        membershipService.removeMember(tenantId, userId);
-        return ResponseEntity.noContent().build();
+            @PathVariable Long userId
+    ) {
+        facade.removeMember(tenantId, userId);
     }
 
-    @PostMapping("/invite")
-    public ResponseEntity<Void> inviteMember(
+    /* =====================================================
+     * 4️⃣ MEMBER SELF-SERVICE
+     * ===================================================== */
+
+    /**
+     * GET /tenants/{tenantId}/members/me
+     */
+    @GetMapping("/me")
+    public MemberResponse myMember(
             @PathVariable Long tenantId,
-            @RequestParam String email,
-            @RequestParam TenantRole role,
-            @AuthenticationPrincipal Auth currentUser) {
-        // TODO: Kiểm tra quyền - chỉ ADMIN/OWNER mới được mời thành viên
-        membershipService.inviteByEmail(tenantId, email, role, currentUser);
-        return ResponseEntity.accepted().build();
+            @AuthenticationPrincipal Auth user
+    ) {
+        return facade.myMember(tenantId, user);
+    }
+
+    /**
+     * DELETE /tenants/{tenantId}/members/me
+     */
+    @DeleteMapping("/me")
+    public void leaveTenant(
+            @PathVariable Long tenantId,
+            @AuthenticationPrincipal Auth user
+    ) {
+        facade.leave(tenantId, user);
     }
 }

@@ -20,10 +20,18 @@ public class Tenant {
     @Column(nullable = false)
     private String name;
 
+    @Column(columnDefinition = "TEXT")
+    private String description;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     @Builder.Default
     private TenantStatus status = TenantStatus.ACTIVE;
+    
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    @Builder.Default
+    private TenantVisibility visibility = TenantVisibility.PUBLIC;
 
     @Column(name = "expires_at")
     private LocalDateTime expiresAt;

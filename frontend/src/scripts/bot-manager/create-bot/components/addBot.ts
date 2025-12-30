@@ -3,7 +3,7 @@ import type { FormInstance, FormRules } from 'element-plus';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { botApi } from '@/api/botApi';
 import { useI18n } from 'vue-i18n';
-import { BOT_TEMPLATES } from '@/until/constant'; // Đảm bảo đường dẫn này đúng
+import { BOT_TEMPLATES } from '@/utils/constant'; // Đảm bảo đường dẫn này đúng
 
 export default {
     props: ['viewSettings'],

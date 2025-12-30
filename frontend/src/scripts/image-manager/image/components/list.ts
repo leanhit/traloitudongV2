@@ -1,7 +1,7 @@
 import { useI18n } from "vue-i18n";
 import { ref, reactive, watch, onMounted } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
-import { filterDataFunction, splitData, formatDateTime } from "@/until/search";
+import { filterDataFunction, splitData, formatDateTime } from "@/utils/search";
 import { imageApi } from "@/api/imageApi";
 import { useImageStore } from "@/stores/imageStore";
 import { useCategoryStore } from "@/stores/categoryStore";
