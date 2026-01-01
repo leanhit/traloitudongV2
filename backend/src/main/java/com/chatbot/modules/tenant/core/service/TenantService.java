@@ -247,7 +247,6 @@ public class TenantService {
                 return TenantSearchResponse.builder()
                         .id(tenant.getId())
                         .name(tenant.getName())
-                        .description(tenant.getDescription() != null ? tenant.getDescription() : "")
                         .status(tenant.getStatus())
                         .visibility(tenant.getVisibility())
                         .createdAt(tenant.getCreatedAt())

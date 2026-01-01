@@ -6,6 +6,7 @@ import com.chatbot.modules.tenant.core.repository.TenantRepository;
 import com.chatbot.modules.tenant.membership.dto.*;
 import com.chatbot.modules.tenant.membership.model.*;
 import com.chatbot.modules.tenant.membership.repository.TenantMemberRepository;
+import com.chatbot.modules.tenant.membership.repository.TenantJoinRequestRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,24 +20,32 @@ import java.util.List;
 public class TenantJoinRequestService {
 
     private final TenantMemberRepository memberRepo;
+    private final TenantJoinRequestRepository joinRequestRepo;
     private final TenantRepository tenantRepo;
 
     /* ================= REQUEST ================= */
 
     @Transactional
     public void requestToJoin(Long tenantId, Auth user) {
-        memberRepo.findByTenant_IdAndUser_Id(tenantId, user.getId())
-                .ifPresent(m -> {
-                    throw new IllegalStateException("Already requested or member");
-                });
+        // Check if user already has an active membership
+        if (memberRepo.existsByTenant_IdAndUser_IdAndStatus(
+                tenantId, user.getId(), MembershipStatus.ACTIVE)) {
+            throw new IllegalStateException("Bạn đã là thành viên của tenant này");
+        }
+
+        // Check for existing pending join request
+        if (joinRequestRepo.existsByTenant_IdAndUser_IdAndStatus(
+                tenantId, user.getId(), MembershipStatus.PENDING)) {
+            throw new IllegalStateException("Bạn đã gửi yêu cầu tham gia tenant này");
+        }
 
         Tenant tenant = tenantRepo.findById(tenantId)
-                .orElseThrow(() -> new IllegalStateException("Tenant not found"));
+                .orElseThrow(() -> new IllegalStateException("Không tìm thấy tenant"));
 
-        memberRepo.save(TenantMember.builder()
+        // Create new join request
+        joinRequestRepo.save(TenantJoinRequest.builder()
                 .tenant(tenant)
                 .user(user)
-                .role(TenantRole.NONE)
                 .status(MembershipStatus.PENDING)
                 .build());
     }
@@ -44,7 +53,7 @@ public class TenantJoinRequestService {
     /* ================= LIST ================= */
 
     public List<MemberResponse> getPendingRequests(Long tenantId) {
-        return memberRepo.findByTenant_IdAndStatus(tenantId, MembershipStatus.PENDING)
+        return joinRequestRepo.findByTenant_IdAndStatus(tenantId, MembershipStatus.PENDING)
                 .stream()
                 .map(this::toResponse)
                 .toList();
@@ -57,39 +66,52 @@ public class TenantJoinRequestService {
      */
     @Transactional
     public void updateStatus(Long tenantId, Long requestId, MembershipStatus status) {
-        TenantMember member = getPending(tenantId, requestId);
-
+        TenantJoinRequest request = getPendingRequest(tenantId, requestId);
+        
         if (status == MembershipStatus.ACTIVE) {
-            member.setStatus(MembershipStatus.ACTIVE);
-            member.setRole(TenantRole.MEMBER); 
-            member.setJoinedAt(LocalDateTime.now());
+            // Check if user already has ACTIVE membership
+            if (!memberRepo.existsByTenant_IdAndUser_IdAndStatus(
+                    tenantId, request.getUser().getId(), MembershipStatus.ACTIVE)) {
+                // Create new member
+                memberRepo.save(TenantMember.builder()
+                        .tenant(request.getTenant())
+                        .user(request.getUser())
+                        .role(TenantRole.MEMBER)
+                        .status(MembershipStatus.ACTIVE)
+                        .joinedAt(LocalDateTime.now())
+                        .build());
+            }
+            
+            // Delete the join request
+            joinRequestRepo.delete(request);
+            
         } else if (status == MembershipStatus.REJECTED) {
-            memberRepo.delete(member);
+            // Just delete the request
+            joinRequestRepo.delete(request);
         } else {
-            throw new IllegalStateException("Invalid status");
+            throw new IllegalStateException("Trạng thái không hợp lệ");
         }
     }
 
     /* ================= HELPERS ================= */
 
-    private TenantMember getPending(Long tenantId, Long memberId) {
-        TenantMember m = memberRepo.findById(memberId)
-                .orElseThrow(() -> new IllegalStateException("Request not found"));
+    private TenantJoinRequest getPendingRequest(Long tenantId, Long requestId) {
+        TenantJoinRequest request = joinRequestRepo.findById(requestId)
+                .orElseThrow(() -> new IllegalStateException("Không tìm thấy yêu cầu"));
 
-        if (!m.getTenant().getId().equals(tenantId)
-                || m.getStatus() != MembershipStatus.PENDING) {
-            throw new IllegalStateException("Invalid join request");
+        if (!request.getTenant().getId().equals(tenantId)
+                || request.getStatus() != MembershipStatus.PENDING) {
+            throw new IllegalStateException("Yêu cầu tham gia không hợp lệ");
         }
-        return m;
+        return request;
     }
 
-    private MemberResponse toResponse(TenantMember m) {
+    private MemberResponse toResponse(TenantJoinRequest request) {
         return MemberResponse.builder()
-                .id(m.getId())
-                .userId(m.getUser().getId())
-                .email(m.getUser().getEmail())
-                .role(m.getRole())
-                .joinedAt(m.getJoinedAt() != null ? m.getJoinedAt() : m.getCreatedAt())
+                .id(request.getUser().getId())
+                .email(request.getUser().getEmail())
+                .status(request.getStatus())
+                .requestedAt(request.getCreatedAt())
                 .build();
     }
 }

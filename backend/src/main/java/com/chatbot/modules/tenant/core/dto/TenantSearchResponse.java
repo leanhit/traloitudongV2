@@ -16,7 +16,6 @@ import java.time.LocalDateTime;
 public class TenantSearchResponse {
     private Long id;
     private String name;
-    private String description;
     private TenantStatus status;
     private TenantVisibility visibility;
     private LocalDateTime createdAt;

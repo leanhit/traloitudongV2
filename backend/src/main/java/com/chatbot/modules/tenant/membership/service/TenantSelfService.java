@@ -3,6 +3,7 @@ package com.chatbot.modules.tenant.membership.service;
 import com.chatbot.modules.auth.model.Auth;
 import com.chatbot.modules.tenant.membership.dto.*;
 import com.chatbot.modules.tenant.membership.model.*;
+import com.chatbot.modules.tenant.membership.repository.TenantJoinRequestRepository;
 import com.chatbot.modules.tenant.membership.repository.TenantMemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -16,17 +17,19 @@ import java.util.List;
 public class TenantSelfService {
 
     private final TenantMemberRepository memberRepo;
+    private final TenantJoinRequestRepository joinRequestRepo;
 
     /* ================= MY PENDING ================= */
 
     public List<TenantPendingResponse> getMyPending(Auth user) {
-        return memberRepo.findByUser_IdAndStatus(user.getId(), MembershipStatus.PENDING)
+        return joinRequestRepo.findByUser_IdAndStatus(user.getId(), MembershipStatus.PENDING)
                 .stream()
-                .map(m -> TenantPendingResponse.builder()
-                        .id(m.getTenant().getId())
-                        .name(m.getTenant().getName())
-                        .description(m.getTenant().getDescription())
-                        .requestedAt(m.getCreatedAt())
+                .map(request -> TenantPendingResponse.builder()
+                        .id(request.getTenant().getId())
+                        .name(request.getTenant().getName())
+                        .status(request.getTenant().getStatus())
+                        .visibility(request.getTenant().getVisibility())
+                        .requestedAt(request.getCreatedAt())
                         .build())
                 .toList();
     }
