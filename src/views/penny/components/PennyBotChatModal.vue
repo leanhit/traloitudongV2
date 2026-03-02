@@ -124,6 +124,7 @@
 import { ref, computed, onMounted, nextTick, watch } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useI18n } from 'vue-i18n'
+import { getRelativeTime, formatTime } from '@/utils/dateUtils'
 import { usePennyBotStore } from '@/stores/pennyBotStore'
 
 export default {
@@ -241,13 +242,6 @@ export default {
         'GENERAL': 'General Purpose'
       }
       return names[botType] || botType
-    }
-
-    const formatTime = (timestamp) => {
-      return new Date(timestamp).toLocaleTimeString([], {
-        hour: '2-digit',
-        minute: '2-digit'
-      })
     }
 
     // Add welcome message when modal opens

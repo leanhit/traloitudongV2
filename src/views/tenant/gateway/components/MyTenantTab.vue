@@ -116,6 +116,7 @@
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { Icon } from '@iconify/vue'
+import { formatDateTime } from '@/utils/dateUtils'
 import { useI18n } from 'vue-i18n'
 import { useGatewayTenantStore } from '@/stores/tenant/gateway/myTenantStore'
 import { secureImageUrl } from '@/utils/imageUtils'
@@ -150,17 +151,12 @@ export default {
       await tenantStore.activateTenant(id)
       await tenantStore.fetchUserTenants()
     }
-    const formatDateTime = (dateString) => {
-      if (!dateString) return 'N/A'
-      return new Date(dateString).toLocaleDateString()
-    }
     return {
       tenantList,
       loading,
       enterWorkspace,
       suspendTenant,
       activateTenant,
-      formatDateTime,
       secureImageUrl
     }
   }

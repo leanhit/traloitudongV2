@@ -204,6 +204,7 @@
 import { ref, onMounted, watch } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useI18n } from 'vue-i18n'
+import { formatDateTime } from '@/utils/dateUtils'
 import { usePennyBotStore } from '@/stores/pennyBotStore'
 
 export default {
@@ -305,11 +306,6 @@ export default {
       if (!ms) return '0ms'
       if (ms < 1000) return `${ms}ms`
       return `${(ms / 1000).toFixed(1)}s`
-    }
-
-    const formatDateTime = (dateString) => {
-      if (!dateString) return 'N/A'
-      return new Date(dateString).toLocaleString()
     }
 
     // Watch for bot changes and fetch analytics

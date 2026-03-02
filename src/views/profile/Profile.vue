@@ -388,6 +388,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useI18n } from 'vue-i18n'
+import { formatDate } from '@/utils/dateUtils'
 import { useAuthStore } from '@/stores/authStore'
 import { secureImageUrl } from '@/utils/imageUtils'
 import { usersApi } from '@/api/usersApi'
@@ -613,10 +614,6 @@ export default {
     }
     const openLink = (url) => {
       window.open(url, '_blank')
-    }
-    const formatDate = (date) => {
-      if (!date) return 'N/A'
-      return new Date(date).toLocaleDateString()
     }
     const handleTabChange = (tabName) => {
       activeTab.value = tabName

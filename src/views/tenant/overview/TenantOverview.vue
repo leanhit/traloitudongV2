@@ -164,6 +164,7 @@ import AddressModal from './components/modals/AddressModal.vue'
 import { useTenantAdminContextStore } from '@/stores/tenant/admin/tenantContextStore'
 import { tenantApi } from '@/api/tenantApi'
 import { addressApi } from '@/api/addressApi'
+import { dateTimeLocalToIso } from '@/utils/dateUtils'
 import { getCurrentInstance } from 'vue'
 
 export default {
@@ -302,7 +303,11 @@ export default {
           updateData.visibility = formData.visibility
         }
         if (formData.expiresAt) {
-          updateData.expiresAt = formData.expiresAt
+          // Convert datetime-local to ISO string for backend
+          const isoDate = dateTimeLocalToIso(formData.expiresAt)
+          if (isoDate) {
+            updateData.expiresAt = isoDate
+          }
         }
         
         const response = await tenantApi.updateTenantBasicInfo(tenantStore.activeTenantId, updateData)

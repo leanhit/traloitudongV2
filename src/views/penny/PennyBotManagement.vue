@@ -292,6 +292,7 @@
 import { computed, ref, onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useI18n } from 'vue-i18n'
+import { formatDate, formatDateTime } from '@/utils/dateUtils'
 import { usePennyBotStore } from '@/stores/pennyBotStore'
 import { usePennyRuleStore } from '@/stores/pennyRuleStore'
 import { usePennyConnectionStore } from '@/stores/pennyConnectionStore'
@@ -439,15 +440,6 @@ export default {
         console.error('Failed to delete rule:', error)
         alert('Failed to delete rule: ' + error.message)
       }
-    }
-
-    const formatDate = (dateString) => {
-      return new Date(dateString).toLocaleDateString()
-    }
-
-    const formatDateTime = (dateString) => {
-      if (!dateString) return 'N/A'
-      return new Date(dateString).toLocaleDateString()
     }
 
     const closeModal = () => {

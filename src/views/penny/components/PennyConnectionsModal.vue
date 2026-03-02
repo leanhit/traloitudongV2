@@ -227,6 +227,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useI18n } from 'vue-i18n'
+import { formatDateTime } from '@/utils/dateUtils'
 import { usePennyConnectionStore } from '@/stores/pennyConnectionStore'
 import PennyConnectionModal from './PennyConnectionModal.vue'
 
@@ -399,11 +400,6 @@ export default {
       if (priority >= 80) return 'high'
       if (priority >= 50) return 'medium'
       return 'low'
-    }
-
-    const formatDateTime = (dateString) => {
-      if (!dateString) return 'N/A'
-      return new Date(dateString).toLocaleDateString()
     }
 
     const closeOnBackdrop = (event) => {
